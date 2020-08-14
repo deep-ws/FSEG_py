@@ -122,7 +122,7 @@ if __name__ == '__main__':
     # run segmentation. try different window size
     seg_out = Fseg(Ig, ws=19, seeds=seeds)
 
-    print 'FSEG runs in %0.2f seconds. ' % (time.time() - time0)
+    print('FSEG runs in %0.2f seconds. ' % (time.time() - time0))
 
     # show results
     fig, ax = plt.subplots(ncols=2, sharex=True, sharey=True, figsize=(10, 5))

@@ -1,5 +1,6 @@
-import numpy as np
 import math
+
+import numpy as np
 from scipy import ndimage
 
 
@@ -10,8 +11,8 @@ def log_filter(sgm, fsize):
     :param fsize: filter size, [h, w]
     :return: LoG filter
     """
-    wins_x = fsize[1] / 2
-    wins_y = fsize[0] / 2
+    wins_x = int(fsize[1] / 2)
+    wins_y = int(fsize[0] / 2)
 
     out = np.zeros(fsize, dtype=np.float32)
 

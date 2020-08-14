@@ -3,15 +3,17 @@
 Factorization based segmentation
 
 """
+import math
 import time
+
+import matplotlib.pyplot as plt
 import numpy as np
 from numpy import linalg as LA
-from fseg_filters import image_filtering
-import matplotlib.pyplot as plt
-
 from scipy import linalg as LAsci
-import math
-from skimage import io, color
+from skimage import color, io, transform
+from skimage.color import rgb2gray
+
+from fseg_filters import image_filtering
 
 
 def SHcomp(Ig, ws, BinN=11):
@@ -50,6 +52,9 @@ def SHcomp(Ig, ws, BinN=11):
     np.cumsum(integral_hist, axis=0, out=integral_hist, dtype=np.float32)
 
     # compute spectral histogram based on integral histogram
+    print("h", h)
+    print("ws", ws)
+    ws = int(ws)
     padding_l = np.zeros((h, ws + 1, BinN * bn), dtype=np.int32)
     padding_r = np.tile(integral_hist[:, -1:, :], (1, ws, 1))
 
@@ -77,6 +82,7 @@ def SHcomp(Ig, ws, BinN=11):
 def SHedgeness(sh_mtx, ws):
     h, w, _ = sh_mtx.shape
     edge_map = np.ones((h, w)) * -1
+    ws = int(ws)
     for i in range(ws, h-ws-1):
         for j in range(ws, w-ws-1):
             edge_map[i, j] = np.sqrt(np.sum((sh_mtx[i - ws, j, :] - sh_mtx[i + ws, j, :])**2)
@@ -111,14 +117,14 @@ def Fseg(Ig, ws, segn, omega, nonneg_constraint=True):
 
     if segn == 0:  # estimate the segment number
         lse_ratio = np.cumsum(k) * 1. / (N1 * N2)
-        print lse_ratio
-        print np.sum(k)/(N1 * N2)
+        print(lse_ratio)
+        print(np.sum(k)/(N1 * N2))
         segn = np.sum(lse_ratio > omega)
-        print 'Estimated segment number: %d' % segn
+        print('Estimated segment number: %d' % segn)
 
         if segn <= 1:
             segn = 2
-            print 'Warning: Segment number is set to 2. May need to reduce omega for better segment number estimation.'
+            print('Warning: Segment number is set to 2. May need to reduce omega for better segment number estimation.')
 
     dimn = segn
 
@@ -186,7 +192,7 @@ def Fseg(Ig, ws, segn, omega, nonneg_constraint=True):
 
             d = Y.T - np.dot(w, h)
             dnorm = np.sqrt(np.mean(d * d))
-            print(i, np.abs(dnorm - dnorm0), dnorm)
+            print((i, np.abs(dnorm - dnorm0), dnorm))
             if np.abs(dnorm - dnorm0) < .1:
                 break
 
@@ -202,7 +208,11 @@ if __name__ == '__main__':
     time0 = time.time()
     # an example of using Fseg
     # read image
+    # img = io.imread('abnormal.jpg')
+    # img = rgb2gray(img)
+    # img = transform.resize(img, (320, 320))
     img = io.imread('M1.pgm')
+
 
     # define filter bank and apply to image. for color images, convert rgb to grey scale and then apply filter bank
     filter_list = [('log', .5, [3, 3]), ('log', 1, [5, 5]),
@@ -218,7 +228,7 @@ if __name__ == '__main__':
     # run segmentation. try different window size, with and without nonneg constraints
     seg_out = Fseg(Ig, ws=25, segn=0, omega=.045, nonneg_constraint=True)
 
-    print 'FSEG runs in %0.2f seconds. ' % (time.time() - time0)
+    print('FSEG runs in %0.2f seconds. ' % (time.time() - time0))
 
     # show results
     fig, ax = plt.subplots(ncols=2, sharex=True, sharey=True, figsize=(12, 6))
